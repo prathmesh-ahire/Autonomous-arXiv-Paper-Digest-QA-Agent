@@ -1,0 +1,61 @@
+%%{init: {"flowchart": {"nodeSpacing": 55, "rankSpacing": 70, "curve": "linear"}}}%%
+flowchart TD
+    %% Hand-maintained -- if graph.py changes, update this file by hand, it is not auto-generated.
+    %% Source of truth: src/arxiv_agent/graph.py (build_state_graph). Solid/unlabeled edges are
+    %% graph.add_edge (always taken); dotted/labeled edges are graph.add_conditional_edges, and
+    %% each label names the real trigger read from the routing function. handle_error and END sit
+    %% outside the pipeline subgraph on purpose: clustering the main sequence into a compound node
+    %% makes dagre route long cross-cluster edges (unknown intent, zero results, low confidence,
+    %% embedding failed) around the pipeline's box instead of through its interior. See docs/decisions.md.
+    classDef terminal fill:#e8e8e8,stroke:#888888,stroke-width:1px,color:#222
+    classDef node fill:#eef1fd,stroke:#5b6bd6,stroke-width:1.5px,color:#1a1a2e
+    classDef errorNode fill:#fde2e2,stroke:#c0392b,stroke-width:2px,color:#5c0a0a
+    classDef degradedNode fill:#fff3cd,stroke:#b8860b,stroke-width:2px,color:#5c4400
+    classDef qaNode fill:#e6f4ea,stroke:#2e7d32,stroke-width:1.5px,color:#14401a
+
+    START(["START"]):::terminal
+    handle_error["handle_error"]:::errorNode
+    END(["END"]):::terminal
+
+    subgraph pipeline[" "]
+        direction TB
+        understand_query["understand_query"]:::node
+        search_arxiv["search_arxiv"]:::node
+        select_paper["select_paper"]:::node
+        fetch_parse["fetch_parse<br/>(degrades to abstract-only<br/>on download/scan failure)"]:::degradedNode
+        chunk_embed["chunk_embed<br/>(embeds abstract chunk<br/>if input is abstract-only)"]:::degradedNode
+        summarize["summarize<br/>(degrades to briefing=None<br/>if no/failing LLM)"]:::degradedNode
+
+        understand_query -.->|paper lookup / topic search| search_arxiv
+        search_arxiv -.->|arXiv ID matched| fetch_parse
+        search_arxiv -.->|candidates found| select_paper
+        select_paper -.->|confident match| fetch_parse
+        fetch_parse --> chunk_embed
+        chunk_embed -.->|success| summarize
+    end
+
+    START --> understand_query
+
+    understand_query -.->|unknown intent| handle_error
+    search_arxiv -.->|zero results, after retry| END
+    select_paper -.->|low confidence| END
+    chunk_embed -.->|embedding failed| handle_error
+
+    summarize --> END
+    handle_error --> END
+
+    subgraph qaSession["QA session — separate invocation, loads checkpoint by arXiv ID"]
+        qa["qa"]:::qaNode
+    end
+
+    END -.->|resume from checkpoint by arxiv_id, via update_state — not a graph edge| qaSession
+
+    subgraph legend["Legend"]
+        direction LR
+        lg1[" "]:::node -->|"direct edge (add_edge) — always taken"| lg2[" "]:::node
+        lg3[" "]:::node -.->|"conditional edge (add_conditional_edges) — labeled trigger"| lg4[" "]:::node
+    end
+
+    style pipeline fill:#fbfbfe,stroke:#c7cdf5,stroke-width:1px,stroke-dasharray: 2 2
+    style legend fill:#ffffff,stroke:#aaaaaa,stroke-width:1px
+    style qaSession fill:#f3faf4,stroke:#2e7d32,stroke-width:1px,stroke-dasharray: 4 3

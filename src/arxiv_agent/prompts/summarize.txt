@@ -1,0 +1,80 @@
+You are a research analyst writing a structured executive briefing about an
+arXiv paper for a busy software engineer who has not read the paper and has
+limited time.
+
+Paper metadata (treat as ground truth; do not contradict it):
+Title: {title}
+Authors: {authors}
+arXiv ID: {arxiv_id}
+Published: {published}
+Link: {link}
+
+Paper text (selected sections, possibly truncated or summarized in advance):
+{context}
+
+Write the briefing as a single JSON object with exactly these fields:
+
+{{
+  "title": "<paper title>",
+  "authors": ["<author 1>", "<author 2>"],
+  "arxiv_id": "<arxiv id>",
+  "published": "<YYYY-MM-DD>",
+  "link": "<url>",
+  "why_it_matters": "<a 40-200 word plain-English paragraph explaining why an engineer should care>",
+  "problem_statement": "<1-3 sentences stating the problem the paper addresses>",
+  "method": ["<bullet 1>", "<bullet 2>", "<bullet 3>"],
+  "key_results": ["<bullet 1>", "<bullet 2>"],
+  "limitations": ["<bullet 1>"],
+  "followup_questions": ["<question 1>", "<question 2>", "<question 3>"],
+  "confidence_notes": null
+}}
+
+("method" takes 3 to 8 bullets, "key_results" at least 2, "limitations" at
+least 1, "followup_questions" exactly 3 to 5.)
+
+Example (a different, hypothetical paper — copy only the shape and tone, not
+the content):
+{{
+  "title": "Efficient KV-Cache Compression for Long-Context Inference",
+  "authors": ["A. Researcher", "B. Researcher"],
+  "arxiv_id": "2401.12345",
+  "published": "2024-01-22",
+  "link": "https://arxiv.org/abs/2401.12345",
+  "why_it_matters": "Large language models keep a running memory of every past token while generating text, and that memory grows so large on long documents that it becomes the main limit on how much context a model can actually use. This paper shows how to shrink that memory footprint by roughly half without a noticeable drop in output quality, and it does so without retraining the underlying model. For an engineer running these models in production, that translates directly into either longer usable context windows or more concurrent users on the same GPU hardware, which is often the binding constraint in practice.",
+  "problem_statement": "As context length grows, the memory needed to store the key-value cache during inference grows linearly and becomes the dominant cost, limiting practical context length on fixed hardware.",
+  "method": [
+    "Groups attention heads and shares one compressed key-value representation across each group.",
+    "Learns a low-rank projection that compresses key and value vectors before they are cached.",
+    "Applies compression only past a configurable context-length threshold to protect short-context accuracy.",
+    "Evaluates against an uncompressed baseline on standard long-context benchmarks."
+  ],
+  "key_results": [
+    "Reduces key-value cache memory by about 50% at 32k tokens of context.",
+    "Stays within 1 point of baseline accuracy on long-context question-answering benchmarks.",
+    "Requires no additional training of the base model."
+  ],
+  "limitations": [
+    "Evaluated on only two model families; generalization to other architectures is untested.",
+    "Compression beyond 50% was not explored and may degrade quality further."
+  ],
+  "followup_questions": [
+    "How does the compression ratio trade off against accuracy at context lengths beyond those tested?",
+    "Does the method compose with existing quantization approaches?",
+    "What is the wall-clock inference latency impact, not just the memory savings?"
+  ],
+  "confidence_notes": null
+}}
+
+Rules:
+- State only what the provided paper text supports. If a field genuinely
+  cannot be determined from the text, say so explicitly within that field
+  (e.g. "Not stated in the available text") instead of inventing details.
+- For "limitations": if the paper has no explicit limitations or discussion
+  section, infer plausible limitations from the experimental setup (dataset
+  scope, missing baselines, scale tested, etc.) and prefix each inferred item
+  with "Inferred:" so the reader knows it was not stated directly by the
+  authors. This list must never be left empty.
+- "why_it_matters" is written for a generalist software engineer: avoid
+  jargon the paper itself does not define, and prefer concrete, plain-English
+  explanations over restating technical terms.
+- Respond with ONLY the JSON object. No prose, no markdown, no code fences.

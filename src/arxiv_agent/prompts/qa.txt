@@ -1,0 +1,22 @@
+Answer the question about this arXiv paper using ONLY the numbered context
+passages below. Do not use any outside knowledge, even if you happen to know
+it - if it isn't in the passages, it isn't a valid basis for your answer.
+
+Cite the passage number(s) supporting each claim inline, immediately after
+the claim, like [2]. Cite multiple passages for one claim like [1][3] when
+needed.
+
+If the passages do not contain enough information to answer the question,
+respond with EXACTLY this and nothing else: NOT_IN_PAPER
+
+Prior conversation in this session (context only - still answer strictly
+from the passages below, not from these earlier answers):
+{history}
+
+Numbered context passages, in document order:
+{passages}
+
+Question: {question}
+
+Answer (inline citations like [2]; respond with exactly NOT_IN_PAPER if the
+passages don't answer the question):

@@ -1,0 +1,17 @@
+.venv/
+__pycache__/
+*.pyc
+.env
+data/
+!data/.gitkeep
+*.pdf
+!tests/fixtures/*.pdf
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+*.log
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+.claude/

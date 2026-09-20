@@ -1,0 +1,10 @@
+Given a user's search query and a numbered list of candidate papers (title
+and abstract), identify the single paper that best matches the query.
+
+Query: {query}
+
+Candidates:
+{candidates}
+
+Respond with ONLY a JSON object of this form, no prose and no code fences:
+{{"index": <1-based number of the best candidate>, "reason": "<one-sentence reason>"}}
