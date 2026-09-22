@@ -2,7 +2,7 @@
 
 An autonomous agent that turns a research topic or an arXiv paper ID into a structured executive briefing, then answers follow-up questions about that paper with citations grounded in the actual text. It runs as an explicit [LangGraph](https://github.com/langchain-ai/langgraph) state graph — not a single prompt chain — so each stage (query understanding, retrieval, ranking, parsing, chunking/embedding, summarization, QA) is a separate, testable node with typed shared state. It is built to run entirely on free-tier tools: no paid API key is required, and the agent degrades to parsing + retrieval + extractive QA if no LLM key is configured at all.
 
-> **Video reflection:** _[link to be added after recording]_
+> **Video reflection:** https://youtu.be/tpq7zpCiTNQ?si=G5z0a8hAryDaVW4u
 
 ---
 
