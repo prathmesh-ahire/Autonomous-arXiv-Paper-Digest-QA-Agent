@@ -28,40 +28,74 @@ Mapped to the assessment's required capabilities:
 
 ## Quickstart
 
-### 1. Clone and enter the repo
+Pick the block that matches your OS/tooling and run its commands **in order, top to bottom**. Each block is self-contained through the `.env` copy step; then jump to [4. Run it](#4-run-it), which is the same for everyone.
+
+### macOS / Linux (`pip` + `venv`)
 
 ```bash
+# 1. Clone and enter the repo
 git clone <your-repo-url>
 cd arxiv-digest-agent
-```
 
-### 2. Create a virtual environment and install
-
-**Using `pip` + `venv` (used to build this repo):**
-
-```bash
+# 2. Create a virtual environment and install
 python -m venv .venv
-# Windows
-.venv\Scripts\activate
-# macOS/Linux
 source .venv/bin/activate
-
 pip install -r requirements.txt
 pip install -e .
+
+# 3. Configure your .env
+cp .env.example .env
 ```
 
-**Using `uv`:**
+### Windows — PowerShell (`pip` + `venv`, used to build this repo)
+
+```powershell
+# 1. Clone and enter the repo
+git clone <your-repo-url>
+cd arxiv-digest-agent
+
+# 2. Create a virtual environment and install
+python -m venv .venv
+.venv\Scripts\Activate.ps1
+pip install -r requirements.txt
+pip install -e .
+
+# 3. Configure your .env
+copy .env.example .env
+```
+
+### Windows — Command Prompt (`pip` + `venv`)
+
+```bat
+:: 1. Clone and enter the repo
+git clone <your-repo-url>
+cd arxiv-digest-agent
+
+:: 2. Create a virtual environment and install
+python -m venv .venv
+.venv\Scripts\activate.bat
+pip install -r requirements.txt
+pip install -e .
+
+:: 3. Configure your .env
+copy .env.example .env
+```
+
+### Any OS — `uv` (no manual activation step)
 
 ```bash
+# 1. Clone and enter the repo
+git clone <your-repo-url>
+cd arxiv-digest-agent
+
+# 2. Create a virtual environment and install
 uv venv
 uv pip install -r requirements.txt
 uv pip install -e .
-```
 
-### 3. Configure your `.env`
-
-```bash
+# 3. Configure your .env
 cp .env.example .env
+# Windows (PowerShell or cmd): copy .env.example .env
 ```
 
 Edit `.env` and set at least one of the following (or leave `LLM_PROVIDER=none` to run without any LLM at all — parsing, retrieval, and extractive QA still work, but summarization and full grounded QA need a provider):
@@ -97,6 +131,18 @@ arxiv-agent digest 1409.0473 --provider none
 ```
 
 This still fetches, parses, chunks, and embeds the paper, but prints "No briefing was generated ... Note: No LLM API key is configured" instead of a briefing — summarization has no substitute for an LLM. QA is different: asking a question that clears the similarity floor doesn't refuse — `nodes/qa.py` detects `NullLLM` by name and, instead of a guaranteed `LLMError`, returns the top retrieved passages verbatim under a `"No LLM configured — showing the most relevant passages from the paper."` header, with `/sources` populated from those same passages. A question that matches nothing in the paper still gets the ordinary pre-LLM refusal ("I couldn't find that in this paper."), same as with a real provider. This is exactly the degraded mode the assessment's "no paid API key required" constraint asks for.
+
+Once a briefing prints, you're dropped into an interactive QA session for that paper. Try one question the model can answer from the text, and one it should refuse:
+
+```
+> What optimizer did the authors use for training?
+```
+Answered — grounded citation from the real `5.3 Optimizer` section, including the exact learning-rate formula.
+
+```
+> How does the Transformer compare to GPT-4 on reasoning benchmarks?
+```
+Refused (`NOT_IN_PAPER`) — the 2017 paper predates GPT-4, so nothing in the text supports an answer.
 
 ### Getting a free API key
 
